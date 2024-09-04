@@ -1,34 +1,24 @@
-/*
-Copyright 2017, 2019 the Velero contributors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package plugin
 
 import (
+	"context"
+	"fmt"
+	"strings"
+
 	"github.com/sirupsen/logrus"
-
-	"k8s.io/apimachinery/pkg/api/meta"
-	"k8s.io/apimachinery/pkg/runtime"
-
 	v1 "github.com/vmware-tanzu/velero/pkg/apis/velero/v1"
 	"github.com/vmware-tanzu/velero/pkg/plugin/velero"
+	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
-// BackupPlugin is a backup item action plugin for Velero.
 type BackupPlugin struct {
-	log logrus.FieldLogger
+	log           logrus.FieldLogger
+	configMapData map[string]bool
+	configLoaded  bool
 }
 
 // NewBackupPlugin instantiates a BackupPlugin.
@@ -37,32 +27,76 @@ func NewBackupPlugin(log logrus.FieldLogger) *BackupPlugin {
 }
 
 // AppliesTo returns information about which resources this action should be invoked for.
-// The IncludedResources and ExcludedResources slices can include both resources
-// and resources with group names. These work: "ingresses", "ingresses.extensions".
-// A BackupPlugin's Execute function will only be invoked on items that match the returned
-// selector. A zero-valued ResourceSelector matches all resources.
 func (p *BackupPlugin) AppliesTo() (velero.ResourceSelector, error) {
 	return velero.ResourceSelector{}, nil
 }
 
-// Execute allows the ItemAction to perform arbitrary logic with the item being backed up,
-// in this case, setting a custom annotation on the item being backed up.
-func (p *BackupPlugin) Execute(item runtime.Unstructured, backup *v1.Backup) (runtime.Unstructured, []velero.ResourceIdentifier, error) {
-	p.log.Info("Hello from my BackupPlugin(v1)!")
+// LoadConfigMap reads the configmap and stores the filtering rules in memory.
+func (p *BackupPlugin) LoadConfigMap(namespace, name string) error {
+	if p.configLoaded {
+		return nil
+	}
 
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		return fmt.Errorf("error creating in-cluster config: %v", err)
+	}
+
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return fmt.Errorf("error creating kubernetes client: %v", err)
+	}
+
+	cm, err := clientset.CoreV1().ConfigMaps(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("error getting configmap: %v", err)
+	}
+
+	p.configMapData = make(map[string]bool)
+
+	// Assuming that the ConfigMap has a simple format like:
+	// resources: group/version/resource/name[/namespace]
+	resources := cm.Data["resources"]
+	for _, line := range strings.Split(resources, "\n") {
+		if line != "" {
+			p.configMapData[line] = true
+		}
+	}
+
+	p.configLoaded = true
+	return nil
+}
+
+// Execute is the function that performs backup logic based on ConfigMap filtering.
+func (p *BackupPlugin) Execute(item runtime.Unstructured, backup *v1.Backup) (runtime.Unstructured, []velero.ResourceIdentifier, error) {
+	// Load the configmap on the first execution
+	if !p.configLoaded {
+		if err := p.LoadConfigMap("velero", "resource-filter"); err != nil {
+			return nil, nil, fmt.Errorf("error loading configmap: %v", err)
+		}
+	}
+
+	// Extract GVR, Name, and optionally Namespace
+	gvr := item.GetObjectKind().GroupVersionKind()
 	metadata, err := meta.Accessor(item)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("error accessing metadata: %v", err)
+	}
+	name := metadata.GetName()
+	namespace := metadata.GetNamespace()
+
+	// Build the key to look up in the configmap (group/version/resource/name[/namespace])
+	key := fmt.Sprintf("%s/%s/%s/%s", gvr.Group, gvr.Version, gvr.Kind, name)
+	if namespace != "" {
+		key = fmt.Sprintf("%s/%s", key, namespace)
 	}
 
-	annotations := metadata.GetAnnotations()
-	if annotations == nil {
-		annotations = make(map[string]string)
+	// Check if the resource should be backed up
+	if p.configMapData[key] {
+		p.log.Infof("Backing up resource: %s", key)
+		return item, nil, nil
 	}
 
-	annotations["velero.io/my-backup-plugin"] = "1"
-
-	metadata.SetAnnotations(annotations)
-
-	return item, nil, nil
+	p.log.Infof("Skipping resource: %s", key)
+	return nil, nil, nil
 }
