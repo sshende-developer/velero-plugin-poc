@@ -15,9 +15,9 @@
 PKG := github.com/vmware-tanzu/velero-plugin-example
 BIN := velero-plugin-example
 
-REGISTRY ?= velero
+REGISTRY ?= swanandshende
 IMAGE    ?= $(REGISTRY)/velero-plugin-example
-VERSION  ?= main 
+VERSION  ?= v0.1 
 
 GOOS   ?= $(shell go env GOOS)
 GOARCH ?= $(shell go env GOARCH)
