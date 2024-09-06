@@ -12,30 +12,53 @@ import (
 
 // BackupPlugin is a backup item action plugin for Velero.
 type BackupPlugin struct {
-	log           logrus.FieldLogger
-	configMapData map[string]Resource
-	configLoaded  bool
+	log               logrus.FieldLogger
+	configMapData     map[string]Resource
+	configLoaded      bool
+	configMapNotFound bool
 }
 
 // NewBackupPlugin instantiates a BackupPlugin.
 func NewBackupPlugin(log logrus.FieldLogger) *BackupPlugin {
+	log.Info("Entering NewBackupPlugin function.")
+	defer log.Info("Exiting NewBackupPlugin function.")
+
 	return &BackupPlugin{
-		log:           log,
-		configMapData: make(map[string]Resource),
+		log:               log,
+		configMapData:     make(map[string]Resource),
+		configMapNotFound: false,
 	}
 }
 
 // AppliesTo returns information about which resources this action should be invoked for.
 func (p *BackupPlugin) AppliesTo() (velero.ResourceSelector, error) {
+	p.log.Info("Entering AppliesTo function.")
+	defer p.log.Info("Exiting AppliesTo function.")
+
+	// Log that AppliesTo is invoked but returns everything
+	p.log.Info("AppliesTo will apply to all resources.")
 	return velero.ResourceSelector{}, nil
 }
 
 // Execute is the function that performs backup logic based on ConfigMap filtering.
 func (p *BackupPlugin) Execute(item runtime.Unstructured, backup *v1.Backup) (runtime.Unstructured, []velero.ResourceIdentifier, error) {
+	p.log.Info("Entering Execute function.")
+	defer p.log.Info("Exiting Execute function.")
+
+	// If the ConfigMap was not found, allow backup without filtering
+	if p.configMapNotFound {
+		p.log.Info("ConfigMap not found earlier. Allowing backup without filtering.")
+		return item, nil, nil
+	}
+
 	// Load the configmap on the first execution
 	if !p.configLoaded {
-		if err := LoadConfigMap(p.configMapData, backup.Namespace, backup.Name); err != nil {
-			return nil, nil, fmt.Errorf("error loading configmap: %v", err)
+		p.log.Infof("Loading ConfigMap for backup: %s-b-r-f in namespace: %s", backup.Name, backup.Namespace)
+		err := LoadConfigMap(p.configMapData, backup.Namespace, backup.Name, "-b-r-f")
+		if err != nil {
+			p.log.Warnf("ConfigMap not found or error loading configmap: %v. Allowing all resources to be backed up.", err)
+			p.configMapNotFound = true
+			return item, nil, nil // Allow all resources to be backed up if the ConfigMap is not found
 		}
 		p.configLoaded = true
 	}
@@ -44,23 +67,25 @@ func (p *BackupPlugin) Execute(item runtime.Unstructured, backup *v1.Backup) (ru
 	gvr := item.GetObjectKind().GroupVersionKind()
 	metadata, err := meta.Accessor(item)
 	if err != nil {
+		p.log.Errorf("Error accessing metadata for item: %v", err)
 		return nil, nil, fmt.Errorf("error accessing metadata: %v", err)
 	}
 	name := metadata.GetName()
 	namespace := metadata.GetNamespace()
 
-	// Build the key to look up in the configmap (group/version/resource/name[/namespace])
-	key := fmt.Sprintf("%s/%s/%s/%s", gvr.Group, gvr.Version, gvr.Kind, name)
-	if namespace != "" {
-		key = fmt.Sprintf("%s/%s", key, namespace)
-	}
+	// Log the GVR and name of the resource being processed
+	p.log.Infof("Processing resource: GVR = %s/%s/%s, Name = %s, Namespace = %s", gvr.Group, gvr.Version, gvr.Kind, name, namespace)
 
 	// Check if the resource should be backed up
-	if _, exists := p.configMapData[key]; exists {
-		p.log.Infof("Backing up resource: %s", key)
-		return item, nil, nil
+	p.log.Infof("Checking if resource: %s in namespace: %s should be backed up.", name, namespace)
+	if resource, exists := p.configMapData[name]; exists {
+		if IsResourceMatch(resource, gvr.Group, gvr.Version, gvr.Kind, name, namespace) {
+			p.log.Infof("Resource GVR = %s/%s/%s, Name = %s, Namespace %s matches the ConfigMap criteria and will be backed up.", gvr.Group, gvr.Version, gvr.Kind, name, namespace)
+			return item, nil, nil
+		}
 	}
 
-	p.log.Infof("Skipping resource: %s", key)
+	// Log that the resource is being skipped
+	p.log.Infof("Resource GVR = %s/%s/%s, Name = %s, Namespace %s does not match the ConfigMap criteria and will be skipped.", gvr.Group, gvr.Version, gvr.Kind, name, namespace)
 	return nil, nil, nil
 }
