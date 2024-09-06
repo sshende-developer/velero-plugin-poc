@@ -36,8 +36,10 @@ func (p *RestorePlugin) AppliesTo() (velero.ResourceSelector, error) {
 	defer p.log.Info("Exiting AppliesTo function.")
 
 	// Log that AppliesTo is invoked but returns everything
-	p.log.Info("AppliesTo will apply to all resources.")
-	return velero.ResourceSelector{}, nil
+	p.log.Info("AppliesTo will apply to all resources except namespaces.")
+	return velero.ResourceSelector{
+		ExcludedResources: []string{"namespaces"}, // Exclude namespaces from filtering
+	}, nil
 }
 
 // Execute is the function that performs restore logic based on ConfigMap filtering.
