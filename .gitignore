@@ -4,3 +4,4 @@ velero-plugin-example
 .go
 
 _tiltbuild
+hack/deploy-Velero-1-14-0-with-plugin/velero
