@@ -33,7 +33,7 @@ func LoadConfigMap(configMapData map[string]Resource, namespace, backupRestoreNa
 	}
 
 	// Create the configmap name based on backup or restore and suffix
-	configMapName := fmt.Sprintf("%s-%s", backupRestoreName, suffix)
+	configMapName := fmt.Sprintf("%s%s", backupRestoreName, suffix)
 
 	// Use the dynamically constructed ConfigMap name
 	cm, err := clientset.CoreV1().ConfigMaps(namespace).Get(context.TODO(), configMapName, metav1.GetOptions{})
