@@ -4,3 +4,4 @@ velero-plugin-example
 .go
 
 _tiltbuild
+deploy-Velero-1-14-0-with-kubevirt/velero
