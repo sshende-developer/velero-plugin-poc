@@ -2,9 +2,9 @@
 
 # Variables
 NAMESPACE="velero"
-MINIO_DEPLOYMENT_FILE="/home/swanand/work/projects/poc/learn_code_folder/velero-plugin-poc/deploy-Velero-1-14-0-with-kubevirt/velero-code/examples/minio/00-minio-deployment.yaml"
-VELERO_INSTALL_PATH="/home/swanand/work/projects/poc/learn_code_folder/velero-plugin-poc/deploy-Velero-1-14-0-with-kubevirt/velero"
-CREDENTIALS_FILE="/home/swanand/work/projects/poc/learn_code_folder/velero-plugin-poc/deploy-Velero-1-14-0-with-kubevirt/credentials-velero"
+MINIO_DEPLOYMENT_FILE="/home/swanand/work/projects/poc/learn_code_folder/velero-plugin-poc/hack/deploy-Velero-1-14-0-with-plugin/velero-code/examples/minio/00-minio-deployment.yaml"
+VELERO_INSTALL_PATH="/home/swanand/work/projects/poc/learn_code_folder/velero-plugin-poc/hack/deploy-Velero-1-14-0-with-plugin/velero"
+CREDENTIALS_FILE="/home/swanand/work/projects/poc/learn_code_folder/velero-plugin-poc/hack/deploy-Velero-1-14-0-with-plugin/credentials-velero"
 BUCKET_NAME="velero"
 PROVIDER="aws"
 REGION="minio"
