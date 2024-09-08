@@ -20,6 +20,8 @@ cleanup() {
         kill $PORT_FORWARD_PID
         echo "Port-forwarding process killed."
     fi
+
+    rm -rf /tmp/b1
 }
 
 # Trap script exit to clean up port forwarding

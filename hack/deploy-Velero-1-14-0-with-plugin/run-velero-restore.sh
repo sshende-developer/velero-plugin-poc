@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Variables
-BACKUP_NAME=$1
+BACKUP_NAME=b1
 NAMESPACE="test-csi-snapshot"
 #RESTORE_NAME="restore-${BACKUP_NAME}-$(date +%Y%m%d%H%M%S)"
-RESTORE_NAME=$1
+RESTORE_NAME=r1
 MINIO_ALIAS="myminio"
 MINIO_URL="http://127.0.0.1:9000"
 MINIO_ACCESS_KEY="minio"
@@ -51,6 +51,12 @@ if [ $? -ne 0 ]; then
     echo "Failed to set up Minio client. Exiting."
     exit 1
 fi
+
+rm -rf /tmp/r1
+
+./velero restore delete r1
+
+sleep 3
 
 # Create a Velero restore
 restore_command="$VELERO_BINARY_PATH restore create ${RESTORE_NAME} --from-backup ${BACKUP_NAME} --include-namespaces ${NAMESPACE}"
