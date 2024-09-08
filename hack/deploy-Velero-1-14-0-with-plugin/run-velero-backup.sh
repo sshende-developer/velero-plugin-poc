@@ -3,7 +3,7 @@
 # Variables
 NAMESPACE="test-csi-snapshot"
 #BACKUP_NAME="backup-$(date +%Y%m%d%H%M%S)"
-BACKUP_NAME=$1
+BACKUP_NAME="b1"
 MINIO_ALIAS="myminio"
 MINIO_URL="http://127.0.0.1:9000"
 MINIO_ACCESS_KEY="minio"

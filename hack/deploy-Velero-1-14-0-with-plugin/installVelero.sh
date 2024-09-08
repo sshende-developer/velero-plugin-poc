@@ -30,3 +30,7 @@ kubectl apply -f "$MINIO_DEPLOYMENT_FILE"
 
 echo "D O N E"
 
+/home/swanand/work/oneDrive/usefulScripts/create-cm.sh r1-r-r-f velero
+/home/swanand/work/oneDrive/usefulScripts/create-cm.sh r1-r-r-f test-csi-snapshot
+/home/swanand/work/oneDrive/usefulScripts/create-cm.sh b1-b-r-f test-csi-snapshot
+
