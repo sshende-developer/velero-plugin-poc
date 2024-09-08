@@ -29,5 +29,5 @@ func main() {
 }
 
 func newRestoreFilterPlugin(logger logrus.FieldLogger) (interface{}, error) {
-	return plugin.NewRestorePlugin(logger), nil
+	return plugin.NewFilterRestorePlugin(logger), nil
 }

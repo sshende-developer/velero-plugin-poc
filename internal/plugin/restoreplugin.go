@@ -26,8 +26,8 @@ type RestoreFilterPlugin struct {
 	log logrus.FieldLogger
 }
 
-// NewRestorePlugin instantiates a RestorePlugin.
-func NewRestorePlugin(log logrus.FieldLogger) *RestoreFilterPlugin {
+// NewFilterRestorePlugin instantiates a RestorePlugin.
+func NewFilterRestorePlugin(log logrus.FieldLogger) *RestoreFilterPlugin {
 	return &RestoreFilterPlugin{log: log}
 }
 
