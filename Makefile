@@ -17,7 +17,7 @@ BIN := velero-plugin-example
 
 REGISTRY ?= swanandshende
 IMAGE    ?= $(REGISTRY)/velero-plugin-poc
-VERSION  ?= main
+VERSION  ?= latest
 
 GOOS   ?= $(shell go env GOOS)
 GOARCH ?= $(shell go env GOARCH)
