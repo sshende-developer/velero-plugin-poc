@@ -7,7 +7,6 @@ toolchain go1.21.3
 require (
 	github.com/sirupsen/logrus v1.8.1
 	github.com/vmware-tanzu/velero v1.14.0
-	k8s.io/apimachinery v0.25.6
 )
 
 require (
@@ -55,6 +54,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/api v0.25.6 // indirect
+	k8s.io/apimachinery v0.25.6 // indirect
 	k8s.io/client-go v0.25.6 // indirect
 	k8s.io/klog/v2 v2.70.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20220803162953-67bda5d908f1 // indirect

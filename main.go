@@ -24,7 +24,7 @@ import (
 
 func main() {
 	framework.NewServer().
-		RegisterRestoreItemAction("example.io/restore-plugin", newRestorePlugin).
+		RegisterRestoreItemAction("cloudcasa.io/restore-filter-plugin", newRestorePlugin).
 		Serve()
 }
 

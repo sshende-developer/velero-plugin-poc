@@ -19,7 +19,6 @@ package plugin
 import (
 	"github.com/sirupsen/logrus"
 	"github.com/vmware-tanzu/velero/pkg/plugin/velero"
-	"k8s.io/apimachinery/pkg/api/meta"
 )
 
 // RestorePlugin is a restore item action plugin for Velero
@@ -44,21 +43,6 @@ func (p *RestorePlugin) AppliesTo() (velero.ResourceSelector, error) {
 // Execute allows the RestorePlugin to perform arbitrary logic with the item being restored,
 // in this case, setting a custom annotation on the item being restored.
 func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*velero.RestoreItemActionExecuteOutput, error) {
-	p.log.Info("Hello from my RestorePlugin!")
-
-	metadata, err := meta.Accessor(input.Item)
-	if err != nil {
-		return &velero.RestoreItemActionExecuteOutput{}, err
-	}
-
-	annotations := metadata.GetAnnotations()
-	if annotations == nil {
-		annotations = make(map[string]string)
-	}
-
-	annotations["velero.io/my-restore-plugin"] = "1"
-
-	metadata.SetAnnotations(annotations)
-
+	p.log.Info("Hello from my Cloudcasa Restore Filter Plugin!")
 	return velero.NewRestoreItemActionExecuteOutput(input.Item), nil
 }
