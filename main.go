@@ -24,10 +24,10 @@ import (
 
 func main() {
 	framework.NewServer().
-		RegisterRestoreItemAction("example.io/restore-plugin", newRestorePlugin).
+		RegisterRestoreItemAction("cloudcasa.io/restore-filter-plugin", newRestoreFilterPlugin).
 		Serve()
 }
 
-func newRestorePlugin(logger logrus.FieldLogger) (interface{}, error) {
-	return plugin.NewRestorePlugin(logger), nil
+func newRestoreFilterPlugin(logger logrus.FieldLogger) (interface{}, error) {
+	return plugin.NewRestoreFilterPlugin(logger), nil
 }
