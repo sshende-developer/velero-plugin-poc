@@ -22,14 +22,14 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 )
 
-// RestoreFilterPlugin is a restore item action plugin for Velero
-type RestoreFilterPlugin struct {
+// RestorePlugin is a restore item action plugin for Velero
+type RestorePlugin struct {
 	log logrus.FieldLogger
 }
 
-// NewRestoreFilterPlugin instantiates a RestorePlugin.
-func NewRestoreFilterPlugin(log logrus.FieldLogger) *RestoreFilterPlugin {
-	return &RestoreFilterPlugin{log: log}
+// NewRestorePlugin instantiates a RestorePlugin.
+func NewRestorePlugin(log logrus.FieldLogger) *RestorePlugin {
+	return &RestorePlugin{log: log}
 }
 
 // AppliesTo returns information about which resources this action should be invoked for.
@@ -37,14 +37,14 @@ func NewRestoreFilterPlugin(log logrus.FieldLogger) *RestoreFilterPlugin {
 // and resources with group names. These work: "ingresses", "ingresses.extensions".
 // A RestoreItemAction's Execute function will only be invoked on items that match the returned
 // selector. A zero-valued ResourceSelector matches all resources.
-func (p *RestoreFilterPlugin) AppliesTo() (velero.ResourceSelector, error) {
+func (p *RestorePlugin) AppliesTo() (velero.ResourceSelector, error) {
 	return velero.ResourceSelector{}, nil
 }
 
 // Execute allows the RestorePlugin to perform arbitrary logic with the item being restored,
 // in this case, setting a custom annotation on the item being restored.
-func (p *RestoreFilterPlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*velero.RestoreItemActionExecuteOutput, error) {
-	p.log.Info("Hello from my Cloudcasa Restore filter Plugin!")
+func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*velero.RestoreItemActionExecuteOutput, error) {
+	p.log.Info("Hello from my RestorePlugin!")
 
 	metadata, err := meta.Accessor(input.Item)
 	if err != nil {
@@ -56,7 +56,7 @@ func (p *RestoreFilterPlugin) Execute(input *velero.RestoreItemActionExecuteInpu
 		annotations = make(map[string]string)
 	}
 
-	annotations["cloudcasa.io/restore-filter-plugin"] = "1"
+	annotations["velero.io/my-restore-plugin"] = "1"
 
 	metadata.SetAnnotations(annotations)
 
