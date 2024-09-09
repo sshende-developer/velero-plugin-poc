@@ -23,12 +23,22 @@ import (
 
 // RestoreFilterPlugin is a restore item action plugin for Velero
 type RestoreFilterPlugin struct {
-	log logrus.FieldLogger
+	log               logrus.FieldLogger
+	configMapData     map[string]Resource
+	configLoaded      bool
+	configMapNotFound bool
 }
 
 // NewFilterRestorePlugin instantiates a RestorePlugin.
 func NewFilterRestorePlugin(log logrus.FieldLogger) *RestoreFilterPlugin {
-	return &RestoreFilterPlugin{log: log}
+	log.Info("Entering Cloudcasa NewFilterRestorePlugin function.")
+	defer log.Info("Exiting Cloudcasa NewFilterRestorePlugin function.")
+
+	return &RestoreFilterPlugin{
+		log:               log,
+		configMapData:     make(map[string]Resource),
+		configMapNotFound: false,
+	}
 }
 
 // AppliesTo returns information about which resources this action should be invoked for.
@@ -37,12 +47,20 @@ func NewFilterRestorePlugin(log logrus.FieldLogger) *RestoreFilterPlugin {
 // A RestoreItemAction's Execute function will only be invoked on items that match the returned
 // selector. A zero-valued ResourceSelector matches all resources.
 func (p *RestoreFilterPlugin) AppliesTo() (velero.ResourceSelector, error) {
-	return velero.ResourceSelector{}, nil
+	p.log.Info("Entering AppliesTo function.")
+	defer p.log.Info("Exiting AppliesTo function.")
+
+	// Log that AppliesTo is invoked but returns everything
+	p.log.Info("Cloudcasa: AppliesTo will apply to all resources except namespaces.")
+	return velero.ResourceSelector{
+		ExcludedResources: []string{"namespaces"}, // Exclude namespaces from filtering
+	}, nil
 }
 
 // Execute allows the RestorePlugin to perform arbitrary logic with the item being restored,
 // in this case, setting a custom annotation on the item being restored.
 func (p *RestoreFilterPlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*velero.RestoreItemActionExecuteOutput, error) {
+
 	p.log.Info("Hello from my Cloudcasa Restore Filter Plugin!")
 	return velero.NewRestoreItemActionExecuteOutput(input.Item), nil
 }
