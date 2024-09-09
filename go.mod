@@ -6,7 +6,7 @@ toolchain go1.21.3
 
 require (
 	github.com/sirupsen/logrus v1.8.1
-	github.com/vmware-tanzu/velero v1.7.1
+	github.com/vmware-tanzu/velero v1.14.0
 	k8s.io/apimachinery v0.25.6
 	k8s.io/client-go v0.25.6
 )
