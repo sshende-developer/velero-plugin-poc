@@ -63,7 +63,6 @@ func (p *RestoreFilterPlugin) Execute(inputPayload *velero.RestoreItemActionExec
 			return velero.NewRestoreItemActionExecuteOutput(item), nil // Allow all resources to be restored if the ConfigMap is not found
 		}
 		p.configLoaded = true
-		p.log.Infof(" ==> CC Filter Plugin Configmap JSON content is as follows: %v", p.configMapData)
 	}
 
 	// Extract GVR, Name, and Namespace
@@ -101,16 +100,18 @@ func (p *RestoreFilterPlugin) Execute(inputPayload *velero.RestoreItemActionExec
 	}
 
 	// Check if the resource should be restored based on the original namespace
+	p.log.Infof(" ==> CC Filter Plugin Configmap JSON content is as follows: %v", p.configMapData)
 	p.log.Infof(" ==> Checking if resource: %s in original namespace: %s should be restored.", name, originalNamespace)
+
 	if resource, exists := p.configMapData[name]; exists {
-		if IsResourceMatch(resource, gvr.Group, gvr.Version, gvr.Kind, name, originalNamespace) {
-			p.log.Infof(" ==> Resource GVR = %s/%s/%s, Name = %s, Namespace %s matches the ConfigMap criteria and will be restored.", gvr.Group, gvr.Version, gvr.Kind, name, originalNamespace)
+		if IsResourceMatch(resource, gvr.Group, gvr.Version, gvr.Kind, name, originalNamespace, p.log) {
+			p.log.Infof(" ==> Resource GVK = %s/%s/%s, Name = %s, Namespace %s matches the ConfigMap criteria and will be restored.", gvr.Group, gvr.Version, gvr.Kind, name, originalNamespace)
 			return velero.NewRestoreItemActionExecuteOutput(item), nil
 		}
 	}
 
 	// Log that the resource is being skipped
-	p.log.Infof(" ==> Resource GVR = %s/%s/%s, Name = %s, Namespace %s does not match the ConfigMap criteria and will be skipped.", gvr.Group, gvr.Version, gvr.Kind, name, originalNamespace)
+	p.log.Infof(" ==> Resource GVK = %s/%s/%s, Name = %s, Namespace %s does not match the ConfigMap criteria and will be skipped.", gvr.Group, gvr.Version, gvr.Kind, name, originalNamespace)
 	return &velero.RestoreItemActionExecuteOutput{
 		SkipRestore: true,
 	}, nil
